@@ -1,0 +1,178 @@
+openapi: 3.0.0
+info:
+  title: Event Booking API
+  description: Backend API for a mini event management and ticket booking system.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local Node.js Server
+paths:
+  /users:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+              properties:
+                name:
+                  type: string
+                  example: "Ayush"
+                email:
+                  type: string
+                  example: "[EMAIL_ADDRESS]"
+      responses:
+        "201":
+          description: User created
+        "400":
+          description: Invalid input or email exists
+  /events:
+    get:
+      summary: GET all upcoming events
+      responses:
+        "200":
+          description: Array of events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Event"
+    post:
+      summary: Create an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - date
+                - total_capacity
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                date:
+                  type: string
+                  format: date-time
+                total_capacity:
+                  type: integer
+      responses:
+        "201":
+          description: Event created
+  /bookings:
+    post:
+      summary: Book a ticket for an event
+      description: Handles booking logic and verifies event capacity.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - event_id
+              properties:
+                user_id:
+                  type: integer
+                event_id:
+                  type: integer
+      responses:
+        "201":
+          description: Ticket booked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  ticket_code:
+                    type: string
+                    example: "AF84B2"
+        "400":
+          description: Event sold out or invalid data
+  /users/{id}/bookings:
+    get:
+      summary: Fetch a user's bookings
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of bookings for the user
+  /events/{id}/attendance:
+    post:
+      summary: Mark ticket attendance
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ticket_code
+              properties:
+                ticket_code:
+                  type: string
+      responses:
+        "200":
+          description: Attendance marked successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      ticket_code_valid:
+                        type: boolean
+                      total_event_tickets_booked:
+                        type: integer
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date-time
+        total_capacity:
+          type: integer
+        remaining_tickets:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
