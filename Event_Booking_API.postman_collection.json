@@ -101,6 +101,31 @@
 			"response": []
 		},
 		{
+			"name": "Get Upcoming Events",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/events?available=true",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"events"
+					],
+					"query": [
+						{
+							"key": "available",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Book a Ticket",
 			"request": {
 				"method": "POST",

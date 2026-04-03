@@ -34,6 +34,18 @@ paths:
   /events:
     get:
       summary: GET all upcoming events
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          description: Optional date to filter events (YYYY-MM-DD)
+        - in: query
+          name: available
+          schema:
+            type: boolean
+          description: If true, only returns events with remaining tickets.
       responses:
         "200":
           description: Array of events

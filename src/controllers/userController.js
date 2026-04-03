@@ -5,6 +5,11 @@ const getUserBookings = async (req, res) => {
     try {
         const userId = req.params.id;
 
+        // Input Validation
+        if (!userId || !Number.isInteger(Number(userId)) || Number(userId) <= 0) {
+            return res.status(400).json({ success: false, message: 'Valid user ID is required' });
+        }
+
         //  using a SQL JOIN to combine data from the Bookings table and the Events table 
 
         const query = `
@@ -34,10 +39,15 @@ const createUser = async (req, res) => {
     try {
         const { name, email } = req.body;
 
-        if (!name || !email) {
-            return res.status(400).json({ success: false, message: 'Name and email are required' });
+        // Input Validation
+        if (!name || typeof name !== 'string' || name.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Valid name is required' });
         }
-
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || typeof email !== 'string' || !emailRegex.test(email)) {
+            return res.status(400).json({ success: false, message: 'Valid email is required' });
+        }
         const query = 'INSERT INTO Users (name, email) VALUES (?, ?)';
         const [result] = await db.query(query, [name, email]);
 

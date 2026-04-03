@@ -6,12 +6,15 @@ const createBooking = async (req, res) => {
     try {
         const { user_id, event_id } = req.body;
 
-        if (!user_id || !event_id) {
-            return res.status(400).json({ success: false, message: 'user_id and event_id are required' });
+        // Input Validation
+        if (!user_id || !Number.isInteger(Number(user_id)) || Number(user_id) <= 0) {
+            return res.status(400).json({ success: false, message: 'Valid user_id is required' });
         }
-
+        if (!event_id || !Number.isInteger(Number(event_id)) || Number(event_id) <= 0) {
+            return res.status(400).json({ success: false, message: 'Valid event_id is required' });
+        }
         connection = await db.getConnection();
-        
+
         // start transaction
         await connection.beginTransaction();
 
@@ -58,13 +61,16 @@ const createBooking = async (req, res) => {
 
     } catch (error) {
         if (connection) {
-            await connection.rollback(); // undo on error
+            await connection.rollback();
+        }
+        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+            return res.status(404).json({ success: false, message: 'Valid User is required to book a ticket.' });
         }
         console.error('Booking error: ', error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     } finally {
         if (connection) {
-            connection.release(); // return connection to pool
+            connection.release();
         }
     }
 };

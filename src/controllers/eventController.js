@@ -2,7 +2,21 @@ const db = require('../db/db');
 
 const getEvents = async (req, res) => {
     try {
-        const [events] = await db.query('SELECT * FROM Events');
+        let query = 'SELECT * FROM Events WHERE date >= NOW()';
+        let params = [];
+
+        // Allow additional filtering by optional query parameters
+        if (req.query.date) {
+            query += ' AND DATE(date) = DATE(?)';
+            params.push(req.query.date);
+        }
+        if (req.query.available === 'true') {
+            query += ' AND remaining_tickets > 0';
+        }
+
+        query += ' ORDER BY date ASC';
+
+        const [events] = await db.query(query, params);
         
         res.status(200).json({
             success: true,
@@ -18,10 +32,16 @@ const createEvent = async (req, res) => {
     try {
         const { title, description, date, total_capacity } = req.body;
 
-        if (!title || !date || !total_capacity) {
-            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        // Input Validation
+        if (!title || typeof title !== 'string' || title.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Valid title is required' });
         }
-
+        if (!date || isNaN(Date.parse(date))) {
+            return res.status(400).json({ success: false, message: 'Valid date is required (e.g., YYYY-MM-DD HH:MM:SS)' });
+        }
+        if (total_capacity === undefined || !Number.isInteger(Number(total_capacity)) || Number(total_capacity) <= 0) {
+            return res.status(400).json({ success: false, message: 'Total capacity must be a positive integer' });
+        }
         const query = `
             INSERT INTO Events (title, description, date, total_capacity, remaining_tickets) 
             VALUES (?, ?, ?, ?, ?)
@@ -44,10 +64,13 @@ const markAttendance = async (req, res) => {
         const eventId = req.params.id;
         const { ticket_code } = req.body;
 
-        if (!ticket_code) {
-            return res.status(400).json({ success: false, message: 'Ticket code required' });
+        // Input Validation
+        if (!eventId || !Number.isInteger(Number(eventId))) {
+            return res.status(400).json({ success: false, message: 'Valid event ID is required' });
         }
-
+        if (!ticket_code || typeof ticket_code !== 'string' || ticket_code.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Valid ticket code is required' });
+        }
         // verify ticket exists for this event
         const [bookingRows] = await db.query(
             'SELECT user_id FROM Bookings WHERE event_id = ? AND ticket_code = ?',

@@ -1,7 +1,10 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
-// Create connection pool
+console.log('connecting to database');
+
+// A pool is used to handle multiple simultaneous requests
+
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
